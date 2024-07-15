@@ -4,20 +4,10 @@ let switchInterval = 30000; // Default interval is 30 seconds
 let savedWindowId; // ID of the window where the timer was started
 let badgeVisible = true; // To track if the badge should be shown
 let timerRunning = false; // To track the state of the timer
-let badgeColor = '#FF0000';
 
-function updateBadgeText(secondsLeft) {
-    if (badgeVisible) {
-        chrome.action.setBadgeBackgroundColor({ color: badgeColor });
-        chrome.action.setBadgeText({ text: secondsLeft.toString() });
-    } else {
-        chrome.action.setBadgeText({ text: '' });
-    }
-}
 
 function startCountdown() {
     let secondsLeft = switchInterval / 1000;
-    updateBadgeText(secondsLeft);
 
     clearInterval(countdownInterval);
     countdownInterval = setInterval(() => {
@@ -26,7 +16,6 @@ function startCountdown() {
             secondsLeft = switchInterval / 1000;
             switchTab();
         }
-        updateBadgeText(secondsLeft);
     }, 1000);
 }
 
@@ -66,22 +55,9 @@ function startTabSwitching() {
 function stopTabSwitching() {
     clearInterval(tabSwitcherInterval);
     clearInterval(countdownInterval);
-    chrome.action.setBadgeText({ text: "" });
     timerRunning = false;
 }
 
-function showBadge() {
-    badgeVisible = true;
-    chrome.storage.local.set({badgeVisible: true});
-    let secondsLeft = switchInterval / 1000;
-    updateBadgeText(secondsLeft);
-}
-
-function hideBadge() {
-    badgeVisible = false;
-    chrome.storage.local.set({badgeVisible: false});
-    chrome.action.setBadgeText({ text: "" });
-}
 
 function updateSwitchInterval(newInterval) {
     switchInterval = newInterval;
@@ -99,9 +75,8 @@ chrome.storage.local.get('switchInterval', function(data) {
 });
 
 
-chrome.storage.local.get(['timerRunning', 'badgeVisible'], function(data) {
+chrome.storage.local.get(['timerRunning'], function(data) {
     timerRunning = data.timerRunning || false;
-    badgeVisible = data.hasOwnProperty('badgeVisible') ? data.badgeVisible : true;
 });
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
@@ -115,21 +90,5 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         stopTabSwitching();
         chrome.storage.local.set({timerRunning: false});
     }
-    
-    if (request.command === "showBadge") {
-        showBadge();
-    } else if (request.command === "hideBadge") {
-        hideBadge();
-    }
-    
-    if (request.command === "updateBadgeColor") {
-        badgeColor = request.color;
-        chrome.storage.local.set({badgeColor: badgeColor}); // Save the new color
-    }
 });
 
-chrome.storage.local.get('badgeColor', function(data) {
-    if (data.badgeColor) {
-        badgeColor = data.badgeColor;
-    }
-});
