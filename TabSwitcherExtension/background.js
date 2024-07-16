@@ -1,5 +1,5 @@
 let switchInterval = 1; // Default interval is 1 minute
-let reloadInterval = 2; //minutes
+let reloadInterval = 30; //minutes
 let savedWindowId; // ID of the window where the timer was started
 let timerRunning = false; // To track the state of the timer
 
@@ -71,10 +71,10 @@ chrome.storage.local.get('reloadInterval', function(data) {
 checkAlarmState();
 
 chrome.alarms.onAlarm.addListener((alarm) => {
-    if(alarm.name = 'tabswitch-alarm'){
+    if(alarm.name == 'tabswitch-alarm'){
         console.log("tabswitch ringing")
         switchTab();
-    } else if (alarm.name = 'reload-alarm'){
+    } if (alarm.name == 'reload-alarm'){
         console.log("reload ringing");
         reloadTabs();
     }
@@ -89,6 +89,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         //update alarm interval of chrome alarm to request.interval
         chrome.alarms.get('reload-alarm').periodInMinutes = request.interval_reload;
         chrome.storage.local.set({reloadInterval: request.interval_reload});
+        reloadInterval = request.interval_reload;
         console.log("stored new reload intervall");
     } else if (request.command === "startTimer") {
         //create chrome alarm for switching
@@ -101,13 +102,14 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             delayInMinutes: reloadInterval,
             periodInMinutes: reloadInterval
         });
-        console.log("alarm created");
+        console.log(reloadInterval);
+        console.log("alarms created");
         
         chrome.storage.local.set({timerRunning: true});
     } else if (request.command === "stopTimer") {
         //clear chrome alarm
         chrome.alarms.clearAll();
-        console.log("alarm cleared");
+        console.log("alarms cleared");
         chrome.storage.local.set({timerRunning: false});
     }
 });

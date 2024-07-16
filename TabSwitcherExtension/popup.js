@@ -9,8 +9,8 @@ document.addEventListener('DOMContentLoaded', function() {
         timerRunning = data.timerRunning || false;
 
         // Set the interval in the UI
-        let interval = data.switchInterval || 1; // Default to 30 seconds if not set
-        let interval_reload = data.reloadInterval || 1;
+        let interval = data.switchInterval || 1; // Default to 1 minute if not set
+        let interval_reload = data.reloadInterval || 30;
         document.getElementById('interval').value = interval;
         document.getElementById('interval_reload').value = interval_reload;
 
