@@ -38,9 +38,14 @@
 </head>
 <body>
     <div class="control-group">
-        <label for="interval">Interval (mins):</label>
-        <input type="number" id="interval" min="0.5" value="1">
+        <label for="interval">Switch Interval (mins):</label>
+        <input type="number" id="interval" min="1" value="1">
         <button id="save">Save</button>
+    </div>
+    <div class="control-group">
+        <label for="interval_reload">Reload Interval (mins):</label>
+        <input type="number" id="interval_reload" min="1" value="120">
+        <button id="save_reload">Save</button>
     </div>
     <div class="control-group">
         <button id="toggleTimer">Start Timer</button>
