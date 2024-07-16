@@ -19,7 +19,25 @@ function switchTab() {
         });
     });
 }
-
+async function checkAlarmState() {
+    const { alarmEnabled } = await chrome.storage.local.get('timerRunning');
+    console.log("check if alarm is enabled");
+    if (timerRunning){
+        console.log("alarm is enabled, check for existence next");
+        const alarm = await chrome.alarms.get('tabswitch-alarm');
+        if (!alarm){
+            await chrome.alarms.create('tabswitch-alarm', {
+                delayInMinutes: switchInterval,
+                periodInMinutes: switchInterval
+            });
+            console.log("new alarm created");
+        } 
+    }
+}
+chrome.storage.local.get(['timerRunning'], function(data) {
+    timerRunning = data.timerRunning || false;
+    
+});
 
 // Load the saved interval value when the background script starts
 chrome.storage.local.get('switchInterval', function(data) {
@@ -30,22 +48,18 @@ chrome.storage.local.get('switchInterval', function(data) {
 });
 
 
-chrome.storage.local.get(['timerRunning'], function(data) {
-    timerRunning = data.timerRunning || false;
-    if (timerRunning){
-        const alarm = chrome.alarms.get('tabswitch-alarm');
-        if (!alarm){
-            chrome.alarms.create('tabswitch-alarm', {
-                delayInMinutes: switchInterval,
-                periodInMinutes: switchInterval
-            });
-        }
-    }
-});
+checkAlarmState();
 
+chrome.alarms.onAlarm.addListener((alarm) => {
+    if(alarm.name = 'tabswitch-alarm'){
+        console.log("tabswitch ringing")
+        switchTab();
+    }
+})
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.command === "updateInterval") {
         //update alarm interval of chrome alarm to request.interval
+        chrome.alarms.get('tabswitch-alarm').periodInMinutes = request.interval;
         chrome.storage.local.set({switchInterval: request.interval});
     } else if (request.command === "startTimer") {
         //create chrome alarm
@@ -54,16 +68,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             periodInMinutes: switchInterval
         });
         console.log("alarm created");
-        chrome.alarms.onAlarm.addListener((alarm) => {
-            if(alarm.name = 'tabswitch-alarm'){
-                console.log("tabswitch ringing")
-                switchTab();
-            }
-        })
+        
         chrome.storage.local.set({timerRunning: true});
     } else if (request.command === "stopTimer") {
         //clear chrome alarm
         chrome.alarms.clearAll();
+        console.log("alarm cleared");
         chrome.storage.local.set({timerRunning: false});
     }
 });
