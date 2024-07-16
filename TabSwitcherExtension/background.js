@@ -12,10 +12,10 @@ function switchTab() {
         chrome.tabs.query({active: true, currentWindow: true}, function(activeTabs) {
             let currentTabIndex = activeTabs[0].index;
             let nextTabIndex = (currentTabIndex + 1) % tabs.length;
-
-            /*chrome.tabs.update(tabs[nextTabIndex].id, {active: true}, () => {
-                chrome.tabs.reload(tabs[nextTabIndex].id);
-            });*/
+            console.log("switch");
+            chrome.tabs.update(tabs[nextTabIndex].id, {active: true}, () => {
+               // chrome.tabs.reload(tabs[nextTabIndex].id);
+            });
         });
     });
 }
@@ -32,6 +32,15 @@ chrome.storage.local.get('switchInterval', function(data) {
 
 chrome.storage.local.get(['timerRunning'], function(data) {
     timerRunning = data.timerRunning || false;
+    if (timerRunning){
+        const alarm = chrome.alarms.get('tabswitch-alarm');
+        if (!alarm){
+            chrome.alarms.create('tabswitch-alarm', {
+                delayInMinutes: switchInterval,
+                periodInMinutes: switchInterval
+            });
+        }
+    }
 });
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
@@ -47,8 +56,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         console.log("alarm created");
         chrome.alarms.onAlarm.addListener((alarm) => {
             if(alarm.name = 'tabswitch-alarm'){
+                console.log("tabswitch ringing")
                 switchTab();
-                console.log("x");
             }
         })
         chrome.storage.local.set({timerRunning: true});
